@@ -5,7 +5,6 @@ Bart van Nobelen - 05-07-2022
 """
 
 import pandas as pd
-import numpy as np
 
 from domain.import_object import *
 from modules.defaultmodule import DefaultModule
@@ -20,71 +19,72 @@ class CreatingResultsExcel(DefaultModule):
         super().__init__("Creating Results Excel", reps)
         reps.dbrw.stage_init_financial_results_structure()
         self.operator = operator
-        if self.reps.current_tick == 0:
-            self.ticks = []
-            self.years = []
-            self.marketclearingvolume = []      # MW
-            self.marketclearingprice = []       # EUR
-            self.total_installed_capacity = []
-            self.nr_of_powerplants = []
-            self.nr_of_powerplants_in_sr = []
-            # self.cost_of_sr = []       # EUR
-            # self.volume_of_sr = []      # MW
+        self.ticks = []
+        self.years = []
+        self.marketclearingvolume = []      # MW
+        self.marketclearingprice = []       # EUR
+        self.total_installed_capacity = []
+        self.nr_of_powerplants = []
+        self.nr_of_powerplants_in_sr = []
+        # self.cost_of_sr =[]]       # EUR
+        # self.volume_of_sr =[]]      # MW
 
-            self.average_electricity_price = []         # EUR/MWh
-            self.shortage_hours = []        # hours/year
-            self.supply_ratio = []      # MW/MW
+        self.average_electricity_price = []         # EUR/MWh
+        self.shortage_hours = []        # hours/year
+        self.supply_ratio = []      # MW/MW
 
-            self.cost_to_consumer = []       # EUR/MWh
-            self.CM_volume = []     # MW
-            self.CM_price = []      # EUR
-            self.CM_cost_per_MW = []       # EUR/MWh
-            self.SR_operator_cash = []      # EUR
-            self.SR_volume = []     # MW
-            self.SR_price = []      # EUR
-            self.SR_cost_per_MW = []       # EUR/MWh
+        self.cost_to_consumer = []       # EUR/MWh
+        self.CM_volume = []     # MW
+        self.CM_price = []      # EUR
+        self.CM_cost_per_MW = []       # EUR/MWh
+        self.SR_operator_cash = []      # EUR
+        self.SR_volume = []     # MW
+        self.SR_price = []      # EUR
+        self.SR_cost_per_MW = []       # EUR/MWh
 
-            self.pp_name = []
-            self.pp_owner = []
-            self.pp_location = []
-            self.pp_technology = []
-            self.pp_fuel = []
-            self.pp_age = []
-            self.pp_efficiency = []
-            self.pp_capacity = []
-            self.pp_acceptedcapacity = []
-            self.pp_status = []
-            self.pp_profit = []
-            self.pp_fixedoperatingcosts = []
-            self.pp_variablecosts = []
-            self.pp_revenues = []
+        self.pp_name = []
+        self.pp_owner = []
+        self.pp_location = []
+        self.pp_technology = []
+        self.pp_fuel = []
+        self.pp_age = []
+        self.pp_efficiency = []
+        self.pp_capacity = []
+        self.pp_acceptedcapacity = []
+        self.pp_status = []
+        self.pp_profit = []
+        self.pp_fixedoperatingcosts = []
+        self.pp_variablecosts = []
+        self.pp_revenues = []
 
     def act(self):
-        self.ticks.append(self.reps.current_tick)
-        self.years.append(self.reps.current_year)
+        overview_data = pd.read_excel('Yearly_results.xlsx', sheet_name='Overview', index_col=0)
+        self.ticks = self.reps.current_tick
+        self.years = self.reps.current_year
         installed_capacity = 0
         for i in self.reps.power_plants.values():
             installed_capacity += i.capacity
-        self.total_installed_capacity.append(installed_capacity)
+        self.total_installed_capacity = installed_capacity
 
         self.get_shortage_hours(self.reps.current_year, installed_capacity)
 
-        self.nr_of_powerplants.append(len(self.reps.power_plants))
-        self.nr_of_powerplants_in_sr.append(len(self.operator.list_of_plants))
+        self.nr_of_powerplants = len(self.reps.power_plants)
+        self.nr_of_powerplants_in_sr = len(self.operator.list_of_plants)
 
         self.get_marketclearingpoint(self.reps.current_tick)
         self.get_power_plant_dispatch_plans(self.reps.current_tick)
         self.get_accepted_bids_CM(self.reps.current_tick)
 
 
-        self.SR_operator_cash.append(self.operator.getCash())
-        self.SR_volume.append(self.operator.getReserveVolume())
+        self.SR_operator_cash = self.operator.getCash()
+        self.SR_volume = self.operator.getReserveVolume()
         # self.SR_price.append(self.operator.getCash())
-        # self.SR_cost_per_MW = []       # EUR/MWh
+        # self.SR_cost_per_MW =[]]       # EUR/MWh
         # self.cost_to_consumer_CM.append(0)
         # self.cost_to_consumer.append(0)
 
-        overview = pd.DataFrame({'Year':self.years,
+        # overview_data = pd.read_excel('Yearly_results.xlsx', sheet_name='Overview')
+        overview_values = pd.DataFrame({'Year':self.years,
                                  'Market clearing volume':self.marketclearingvolume,
                                  'Market clearing price':self.marketclearingprice,
                                  'Average price of electricity':self.average_electricity_price,
@@ -97,11 +97,10 @@ class CreatingResultsExcel(DefaultModule):
                                  'CM price per MW':self.CM_cost_per_MW,
                                  'Number of power plants in SR':self.nr_of_powerplants_in_sr,
                                  'SR volume':self.SR_volume,
-                                 'SR operator cash':self.SR_operator_cash,
-                                 })
+                                 'SR operator cash':self.SR_operator_cash}, index=[0])
+        overview_data = pd.concat([overview_data, overview_values], ignore_index=True)
 
         powerplant_data = pd.DataFrame()
-
         for powerplant in self.reps.power_plants.values():
             self.pp_name = powerplant.name
             self.pp_owner = powerplant.owner.name
@@ -137,7 +136,7 @@ class CreatingResultsExcel(DefaultModule):
             # powerplant_data.append(powerplant_values, ignore_index=True)
 
         writer = pd.ExcelWriter('Yearly_results.xlsx')
-        overview.to_excel(writer, sheet_name='Overview')
+        overview_data.to_excel(writer, sheet_name='Overview')
         pp_year = 'Powerplants' + str(self.reps.current_year)
         powerplant_data.to_excel(writer, sheet_name=pp_year)
         writer.save()
@@ -150,8 +149,8 @@ class CreatingResultsExcel(DefaultModule):
             if i.time == tick and i.market.name == 'GermanCapacityMarket':
                 total_volume += i.volume
                 total_price += i.price
-        self.marketclearingvolume.append(total_volume)
-        self.marketclearingprice.append(total_price)
+        self.marketclearingvolume = total_volume
+        self.marketclearingprice = total_price
 
     def get_accepted_bids_CM(self, tick):
         accepted_amount = 0
@@ -162,13 +161,13 @@ class CreatingResultsExcel(DefaultModule):
                      i.status == globalNames.power_plant_dispatch_plan_status_accepted):
                 accepted_amount += i.accepted_amount
                 total_price += i.price
-        self.CM_volume.append(accepted_amount)
-        self.CM_price.append(total_price)
+        self.CM_volume = accepted_amount
+        self.CM_price = total_price
         if total_price == 0 or accepted_amount == 0:
             price_per_mw = 0
         else:
             price_per_mw = total_price/accepted_amount
-        self.CM_cost_per_MW.append(price_per_mw)
+        self.CM_cost_per_MW = price_per_mw
 
     def get_shortage_hours(self, year, capacity):
         demand_list = []
@@ -183,8 +182,8 @@ class CreatingResultsExcel(DefaultModule):
             x = i * trend
             if x > capacity:
                 count += 1
-        self.shortage_hours.append(count)
-        self.supply_ratio.append(capacity/peak_load_volume)
+        self.shortage_hours = count
+        self.supply_ratio = capacity/peak_load_volume
 
     def get_power_plant_dispatch_plans(self, tick):
         count = 0
@@ -197,7 +196,7 @@ class CreatingResultsExcel(DefaultModule):
             average_price = 0
         else:
             average_price = sum/count
-        self.average_electricity_price.append(average_price)
+        self.average_electricity_price = average_price
         # if len(self.reps.power_plant_dispatch_plans) != 0:
         #     count = 0
         #     sum = 0
@@ -216,10 +215,10 @@ class CreatingResultsExcel(DefaultModule):
 
 
     # key = self.reps.current_tick - 1
-    # MarketClearingPoints = []
+    # MarketClearingPoints =[]
     # for i in self.reps.market_clearing_points.values():
     #     MarketClearingPoints.append(i)
-    # if MarketClearingPoints == []:
+    # if MarketClearingPoints ==[]:
     #     self.marketclearingvolume.append(0)
     #     self.marketclearingprice.append(0)
     # else:
