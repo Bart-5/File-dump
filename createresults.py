@@ -222,7 +222,7 @@ class CreatingResultsExcel(DefaultModule):
         accepted_amount = 0
         total_price = 0
         for i in self.reps.bids.values():
-            if i.market == 'DutchCapacityMarket' and \
+            if i.market == 'GermanCapacityMarket' and \
                     (i.status == globalNames.power_plant_dispatch_plan_status_partly_accepted or
                      i.status == globalNames.power_plant_dispatch_plan_status_accepted):
                 accepted_amount += i.accepted_amount
@@ -238,11 +238,11 @@ class CreatingResultsExcel(DefaultModule):
     def get_shortage_hours(self, year, capacity):
         demand_list = []
         trend = self.reps.dbrw.get_calculated_simulated_fuel_prices_by_year("electricity", globalNames.simulated_prices, year)
-        peak_load_without_trend = max(self.reps.get_hourly_demand_by_power_grid_node_and_year('NL')[1])
+        peak_load_without_trend = max(self.reps.get_hourly_demand_by_power_grid_node_and_year('DE')[1])
         peak_load_volume = peak_load_without_trend * trend
         count = 0
         for i in self.reps.electricity_spot_markets.values():
-            if i.name == 'DutchElectricitySpotMarket':
+            if i.name == 'GermanElectricitySpotMarket':
                 demand_list = i.hourlyDemand[1].values
         for i in demand_list:
             x = i * trend
