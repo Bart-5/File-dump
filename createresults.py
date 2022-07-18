@@ -68,6 +68,7 @@ class CreatingResultsExcel(DefaultModule):
     def act(self):
         self.tick = self.reps.current_tick
         self.year = self.reps.current_year
+        self.country = self.reps.country
 
         installed_capacity = 0
         for i in self.reps.power_plants.values():
@@ -77,15 +78,12 @@ class CreatingResultsExcel(DefaultModule):
         self.get_shortage_hours(self.year, installed_capacity)
 
         self.nr_of_powerplants = len(self.reps.power_plants)
-        self.nr_of_powerplants_in_sr = len(self.operator.list_of_plants)
 
         # self.get_marketclearingpoint(self.tick)
         # self.get_power_plant_dispatch_plans(self.tick)
         self.get_accepted_bids_CM()
+        self.get_strategic_reserve_values()
 
-
-        self.SR_operator_cash = self.operator.getCash()
-        self.SR_volume = self.operator.getReserveVolume()
         # self.SR_price.append(self.operator.getCash())
         # self.SR_cost_per_MW =0]       # EUR/MWh
         # self.cost_to_consumer_CM.append(0)
@@ -176,8 +174,8 @@ class CreatingResultsExcel(DefaultModule):
         self.average_price_per_mwh = self.total_costs / self.total_production
 
         # Reading previous overview data
-        overview_data = pd.read_excel('Yearly_results.xlsx', sheet_name='Overview', index_col=0)
-        # overview_data = pd.DataFrame()
+        # overview_data = pd.read_excel('Yearly_results.xlsx', sheet_name='Overview', index_col=0)
+        overview_data = pd.DataFrame()
         # Creating the dataframe with the new values of current year
         overview_values = pd.DataFrame({'Year':self.year,
                                         'Market clearing volume (MWh)':self.total_production,
@@ -192,7 +190,8 @@ class CreatingResultsExcel(DefaultModule):
                                         'CM price per MW (€/MWh)':self.CM_cost_per_MW,
                                         'Number of power plants in SR':self.nr_of_powerplants_in_sr,
                                         'SR volume (MW)':self.SR_volume,
-                                        'SR operator cash (€)':self.SR_operator_cash}, index=[0])
+                                        'SR operator cash (€)':self.SR_operator_cash,
+                                        'SR price per MW (€/MWh)':self.SR_cost_per_MW}, index=[0])
 
         # Appending new data to existing
         overview_data = pd.concat([overview_data, overview_values], ignore_index=True)
@@ -221,8 +220,12 @@ class CreatingResultsExcel(DefaultModule):
     def get_accepted_bids_CM(self):
         accepted_amount = 0
         total_price = 0
+        if self.country == 'DE'
+            market_zone = 'GermanCapacityMarket'
+        else:
+            market_zone = 'DutchCapacityMarket'
         for i in self.reps.bids.values():
-            if i.market == 'GermanCapacityMarket' and \
+            if i.market == market_zone and \
                     (i.status == globalNames.power_plant_dispatch_plan_status_partly_accepted or
                      i.status == globalNames.power_plant_dispatch_plan_status_accepted):
                 accepted_amount += i.accepted_amount
@@ -235,14 +238,32 @@ class CreatingResultsExcel(DefaultModule):
             price_per_mw = total_price/accepted_amount
         self.CM_cost_per_MW = price_per_mw
 
+    def get_strategic_reserve_values(self):
+        if self.reps.country == 'DE':
+            SR_operator = self.reps.sr_operator['SRO_DE']
+        else:
+            SR_operator = self.reps.sr_operator['SRO_NL']
+        self.SR_operator_cash = SR_operator.cash
+        self.SR_volume = SR_operator.reserveVolume
+        self.nr_of_powerplants_in_sr = len(SR_operator.list_of_plants)
+        if SR_operator.cash == 0 or SR_operator.reserveVolume == 0:
+            price_per_mw = 0
+        else:
+            price_per_mw = -SR_operator.cash/SR_operator.reserveVolume
+        self.SR_cost_per_MW = price_per_mw
+
     def get_shortage_hours(self, year, capacity):
         demand_list = []
+        if self.country == 'DE'
+            market_zone = 'GermanElectricitySpotMarket'
+        else:
+            market_zone = 'DutchElectricitySpotMarket'
         trend = self.reps.dbrw.get_calculated_simulated_fuel_prices_by_year("electricity", globalNames.simulated_prices, year)
-        peak_load_without_trend = max(self.reps.get_hourly_demand_by_power_grid_node_and_year('DE')[1])
+        peak_load_without_trend = max(self.reps.get_hourly_demand_by_power_grid_node_and_year(self.country)[1])
         peak_load_volume = peak_load_without_trend * trend
         count = 0
         for i in self.reps.electricity_spot_markets.values():
-            if i.name == 'GermanElectricitySpotMarket':
+            if i.name == market_zone:
                 demand_list = i.hourlyDemand[1].values
         for i in demand_list:
             x = i * trend

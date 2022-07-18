@@ -92,9 +92,8 @@ class Repository:
         self.loanList = []
         self.financialPowerPlantReports = dict()
 
-        # Create list of plants in SR
-        self.plants_in_SR = []
-        self.bids_sr = dict()
+        # Create Strategic Reserve Operator
+        self.sr_operator = dict()
 
     """
     Repository functions:
@@ -531,13 +530,13 @@ class Repository:
             temp_location = 'None'
         return sum([i.capacity for i in self.power_plants.values() if i.location == temp_location])
 
-    def get_descending_sorted_power_plant_dispatch_plans_by_SRmarket(self, market: Market) -> \
+    def get_descending_sorted_power_plant_dispatch_plans_by_SRmarket(self, market: Market, time: int) -> \
             List[PowerPlantDispatchPlan]:
-        return sorted([i for i in self.bids_sr.values()
-                       if i.market.name == market.name], key=lambda i: i.price, reverse=True)
+        return sorted([i for i in self.bids.values()
+                       if i.market == market.name and i.tick == time], key=lambda i: i.price, reverse=True)
 
     def get_accepted_SR_bids(self):
-        return [i for i in self.bids_sr.values() if
+        return [i for i in self.bids.values() if
                 i.status == globalNames.power_plant_status_strategic_reserve]
 
     def update_power_plant_status(self, plant: PowerPlant, price):
@@ -545,7 +544,7 @@ class Repository:
         new_owner = 'StrategicReserveOperator'
         new_price = price
         for i in self.power_plants.values():
-            if i.name == plant.name:
+            if i.name == plant:
                 i.status = new_status
                 i.owner = new_owner
                 i.technology.variable_operating_costs = new_price
@@ -557,23 +556,31 @@ class Repository:
     #             i.status == globalNames.power_plant_status_strategic_reserve]
     # i.name in self.StrategicReserveOperator.getPlants()]
 
-    def createStrategicReserveOperator(self, volume, zone, cash, plant):
-        name = ("SRO_" + zone)
-        operator = StrategicReserveOperator(name)
-        operator.setReserveVolume(volume)
-        operator.setZone(zone)
-        operator.setCash(cash)
-        operator.setPlants(plant)
-        return operator
 
-    def set_power_plants_in_SR(self, plant):
-        self.plants_in_SR.append(plant)
+    def create_or_update_StrategicReserveOperator(self, name, zone, priceSR, percentSR, volumeSR, cash, list_of_plants) -> StrategicReserveOperator:
+        SRO = next((SRO for SRO in self.sr_operator.values() if SRO.name == name), None)
+        if SRO is None:
+            name = ("SRO_" + zone)
+            SRO = StrategicReserveOperator(name)
 
-    def get_power_plants_in_SR(self):
-        return self.plants_in_SR
+        SRO.zone = zone
+        SRO.reservePriceSR = priceSR
+        SRO.reserveVolumePercentSR = percentSR
+        SRO.reserveVolume = volumeSR
+        SRO.cash = cash
+        SRO.list_of_plants = list_of_plants
+        self.sr_operator[SRO.name] = SRO
+        self.dbrw.stage_sr_operator(SRO)
+        return SRO
 
-    def get_power_plants_in_SR_by_name(self):
-        return [i.name for i in self.plants_in_SR]
+    # def set_power_plants_in_SR(self, plant):
+    #     self.plants_in_SR.append(plant)
+    #
+    # def get_power_plants_in_SR(self):
+    #     return self.plants_in_SR
+    #
+    # def get_power_plants_in_SR_by_name(self):
+    #     return [i.name for i in self.plants_in_SR]
 
     def get_fixed_costs_of_SR_plant(self, plant):
         for i in self.power_plants.values():
@@ -587,31 +594,31 @@ class Repository:
         return operator.getReservePriceSR()
 
 
-    def create_or_update_power_plant_StrategicReserve_plan(self, plant: PowerPlant,
-                                                         bidder: EnergyProducer,
-                                                         market: Market,
-                                                         amount: float,
-                                                         price: float,
-                                                         time: int) -> Bid:
-        bid = next((bid for bid in self.bids_sr.values() if bid.plant == plant.name and \
-                    bid.market == market.name and
-                    bid.tick == time), None)
-        if bid is None:
-            # PowerPlantDispatchPlan not found, so create a new one
-            name = str(datetime.now())
-            bid = Bid(name)
-
-        bid.plant = plant
-        bid.bidder = bidder
-        bid.market = market
-        bid.amount = amount
-        bid.price = price
-        bid.status = globalNames.power_plant_dispatch_plan_status_awaiting
-        bid.accepted_amount = 0
-        bid.tick = time
-        self.bids_sr[bid.name] = bid
-        self.dbrw.stage_bids(bid, time)
-        return bid
+    # def create_or_update_power_plant_StrategicReserve_plan(self, plant: PowerPlant,
+    #                                                      bidder: EnergyProducer,
+    #                                                      market: Market,
+    #                                                      amount: float,
+    #                                                      price: float,
+    #                                                      time: int) -> Bid:
+    #     bid = next((bid for bid in self.bids_sr.values() if bid.plant == plant.name and \
+    #                 bid.market == market.name and
+    #                 bid.tick == time), None)
+    #     if bid is None:
+    #         # PowerPlantDispatchPlan not found, so create a new one
+    #         name = str(datetime.now())
+    #         bid = Bid(name)
+    #
+    #     bid.plant = plant
+    #     bid.bidder = bidder
+    #     bid.market = market
+    #     bid.amount = amount
+    #     bid.price = price
+    #     bid.status = globalNames.power_plant_dispatch_plan_status_awaiting
+    #     bid.accepted_amount = 0
+    #     bid.tick = time
+    #     self.bids_sr[bid.name] = bid
+    #     self.dbrw.stage_bids(bid, time)
+    #     return bid
 
 
 
