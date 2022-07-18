@@ -220,7 +220,7 @@ class CreatingResultsExcel(DefaultModule):
     def get_accepted_bids_CM(self):
         accepted_amount = 0
         total_price = 0
-        if self.country == 'DE'
+        if self.country == 'DE':
             market_zone = 'GermanCapacityMarket'
         else:
             market_zone = 'DutchCapacityMarket'
@@ -254,7 +254,7 @@ class CreatingResultsExcel(DefaultModule):
 
     def get_shortage_hours(self, year, capacity):
         demand_list = []
-        if self.country == 'DE'
+        if self.country == 'DE':
             market_zone = 'GermanElectricitySpotMarket'
         else:
             market_zone = 'DutchElectricitySpotMarket'
