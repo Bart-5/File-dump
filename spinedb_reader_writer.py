@@ -306,6 +306,12 @@ class SpineDBReaderWriter:
         self.stage_object_parameter_values(self.configuration_object_classname, "SimulationYears",
                                            [("InvestmentIteration", nextinvestmentIteration)], "0")
 
+    def stage_init_sr_operator_structure(self):
+        self.stage_object_class(self.sro_classname)
+        self.stage_object_parameters(self.sro_classname,
+                                     ['zone', 'strategic_reserve_price', 'strategic_reserve_volume_percent',
+                                      'strategic_reserve_volume', 'cash', 'list_of_plants', "tick"])
+
     def stage_sr_operator(self, SRO: StrategicReserveOperator):
         self.stage_object(self.sro_classname, SRO.name)
         self.stage_object_parameter_values(self.sro_classname, SRO.name,

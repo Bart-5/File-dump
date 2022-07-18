@@ -174,8 +174,8 @@ class CreatingResultsExcel(DefaultModule):
         self.average_price_per_mwh = self.total_costs / self.total_production
 
         # Reading previous overview data
-        # overview_data = pd.read_excel('Yearly_results.xlsx', sheet_name='Overview', index_col=0)
-        overview_data = pd.DataFrame()
+        overview_data = pd.read_excel('Yearly_results.xlsx', sheet_name='Overview', index_col=0)
+        # overview_data = pd.DataFrame()
         # Creating the dataframe with the new values of current year
         overview_values = pd.DataFrame({'Year':self.year,
                                         'Market clearing volume (MWh)':self.total_production,
@@ -244,12 +244,12 @@ class CreatingResultsExcel(DefaultModule):
         else:
             SR_operator = self.reps.sr_operator['SRO_NL']
         self.SR_operator_cash = SR_operator.cash
-        self.SR_volume = SR_operator.reserveVolume
+        self.SR_volume = SR_operator.strategic_reserve_volume
         self.nr_of_powerplants_in_sr = len(SR_operator.list_of_plants)
-        if SR_operator.cash == 0 or SR_operator.reserveVolume == 0:
+        if SR_operator.cash == 0 or SR_operator.strategic_reserve_volume == 0:
             price_per_mw = 0
         else:
-            price_per_mw = -SR_operator.cash/SR_operator.reserveVolume
+            price_per_mw = -SR_operator.cash/SR_operator.strategic_reserve_volume
         self.SR_cost_per_MW = price_per_mw
 
     def get_shortage_hours(self, year, capacity):

@@ -16,6 +16,7 @@ class StrategicReserveSubmitBids(MarketModule):
 
     def __init__(self, reps: Repository):
         super().__init__('EM-Lab Strategic Reserve: Submit Bids', reps)
+        reps.dbrw.stage_init_bids_structure()
 
     def act(self):
         # For every EnergyProducer
@@ -52,6 +53,7 @@ class StrategicReserveAssignment(MarketModule):
 
     def __init__(self, reps: Repository, operator: StrategicReserveOperator):
         super().__init__('EM-Lab Strategic Reserve: Assign Plants', reps)
+        reps.dbrw.stage_init_sr_operator_structure()
         self.operator = operator
 
     def act(self):

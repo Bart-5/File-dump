@@ -557,7 +557,13 @@ class Repository:
     # i.name in self.StrategicReserveOperator.getPlants()]
 
 
-    def create_or_update_StrategicReserveOperator(self, name, zone, priceSR, percentSR, volumeSR, cash, list_of_plants) -> StrategicReserveOperator:
+    def create_or_update_StrategicReserveOperator(self, name: str,
+                                                  zone: Zone,
+                                                  priceSR: float,
+                                                  percentSR: float,
+                                                  volumeSR: float,
+                                                  cash: float,
+                                                  list_of_plants: list) -> StrategicReserveOperator:
         SRO = next((SRO for SRO in self.sr_operator.values() if SRO.name == name), None)
         if SRO is None:
             name = ("SRO_" + zone)
@@ -582,16 +588,16 @@ class Repository:
     # def get_power_plants_in_SR_by_name(self):
     #     return [i.name for i in self.plants_in_SR]
 
-    def get_fixed_costs_of_SR_plant(self, plant):
-        for i in self.power_plants.values():
-            if i.name == plant.name:
-                cost = i.actualFixedOperatingCost
-                return cost
-
-        # return [i.actualFixedOperatingCost for i in self.power_plants.values() if i.name == plant.name]
-
-    def get_strategic_reserve_price(self, operator: StrategicReserveOperator):
-        return operator.getReservePriceSR()
+    # def get_fixed_costs_of_SR_plant(self, plant):
+    #     for i in self.power_plants.values():
+    #         if i.name == plant.name:
+    #             cost = i.actualFixedOperatingCost
+    #             return cost
+    #
+    #     # return [i.actualFixedOperatingCost for i in self.power_plants.values() if i.name == plant.name]
+    #
+    # def get_strategic_reserve_price(self, operator: StrategicReserveOperator):
+    #     return operator.getReservePriceSR()
 
 
     # def create_or_update_power_plant_StrategicReserve_plan(self, plant: PowerPlant,
