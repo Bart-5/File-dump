@@ -239,18 +239,33 @@ class CreatingResultsExcel(DefaultModule):
         self.CM_cost_per_MW = price_per_mw
 
     def get_strategic_reserve_values(self):
-        if self.reps.country == 'DE':
-            SR_operator = self.reps.sr_operator['SRO_DE']
-        else:
-            SR_operator = self.reps.sr_operator['SRO_NL']
-        self.SR_operator_cash = SR_operator.cash
-        self.SR_volume = SR_operator.strategic_reserve_volume
-        self.nr_of_powerplants_in_sr = len(SR_operator.list_of_plants)
-        if SR_operator.cash == 0 or SR_operator.strategic_reserve_volume == 0:
-            price_per_mw = 0
-        else:
-            price_per_mw = -SR_operator.cash/SR_operator.strategic_reserve_volume
-        self.SR_cost_per_MW = price_per_mw
+        SR_operator = 0
+        for i in self.reps.sr_operator.values():
+            if len(i.list_of_plants) != 0 and i.zone == self.country:
+                SR_operator = i
+        if SR_operator != 0:
+            self.SR_operator_cash = SR_operator.cash
+            self.SR_volume = SR_operator.strategic_reserve_volume
+            self.nr_of_powerplants_in_sr = len(SR_operator.list_of_plants)
+            if SR_operator.cash == 0 or SR_operator.strategic_reserve_volume == 0:
+                price_per_mw = 0
+            else:
+                price_per_mw = -SR_operator.cash/SR_operator.strategic_reserve_volume
+            self.SR_cost_per_MW = price_per_mw
+
+
+        # if self.reps.country == 'DE':
+        #     SR_operator = self.reps.sr_operator['SRO_DE']
+        # else:
+        #     SR_operator = self.reps.sr_operator['SRO_NL']
+        # self.SR_operator_cash = SR_operator.cash
+        # self.SR_volume = SR_operator.strategic_reserve_volume
+        # self.nr_of_powerplants_in_sr = len(SR_operator.list_of_plants)
+        # if SR_operator.cash == 0 or SR_operator.strategic_reserve_volume == 0:
+        #     price_per_mw = 0
+        # else:
+        #     price_per_mw = -SR_operator.cash/SR_operator.strategic_reserve_volume
+        # self.SR_cost_per_MW = price_per_mw
 
     def get_shortage_hours(self, year, capacity):
         demand_list = []
