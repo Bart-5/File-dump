@@ -57,12 +57,14 @@ class PrepareFutureMarketClearing(PrepareMarket):
         """
 
         powerPlantsfromAgent = self.reps.get_power_plants_by_owner(self.agent)
-        if self.reps.country == 'DE':
-            sr_operator = self.reps.sr_operator['SRO_DE']
-        else:
-            sr_operator = self.reps.sr_operator['SRO_NL']
-        powerPlantsinSR = sr_operator.list_of_plants
-        SR_price = sr_operator.strategic_reserve_price
+
+        powerPlantsinSR = []
+        SR_price = 0
+        for i in self.reps.sr_operator.values():
+            if len(i.list_of_plants) != 0 and i.zone == self.reps.country:
+                powerPlantsinSR = i.list_of_plants
+                SR_price = i.strategic_reserve_price
+
         for powerplant in powerPlantsfromAgent:
             fictional_age = powerplant.age + self.reps.energy_producers[self.agent].getInvestmentFutureTimeHorizon()
             if fictional_age > powerplant.technology.expected_lifetime:
