@@ -64,7 +64,7 @@ class StrategicReserveAssignment(MarketModule):
 
             # Retrieve peak load volume of market
             peak_load_without_trend = max(self.reps.get_hourly_demand_by_power_grid_node_and_year(market.parameters['zone'])[1])
-            trend = self.reps.dbrw.get_calculated_simulated_fuel_prices_by_year("electricity", globalNames.simulated_prices, 2020)
+            trend = self.reps.dbrw.get_calculated_simulated_fuel_prices_by_year("electricity", globalNames.simulated_prices, self.reps.current_year)
             peak_load_volume = peak_load_without_trend * trend
 
             # Calculate needed strategic reserve capacity

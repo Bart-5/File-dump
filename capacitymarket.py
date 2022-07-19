@@ -18,7 +18,6 @@ class CapacityMarketSubmitBids(MarketModule):
     """
     The class that submits all bids to the Capacity Market
     """
-
     def __init__(self, reps: Repository):
         super().__init__('EM-Lab Capacity Market: Submit Bids', reps)
         reps.dbrw.stage_init_bids_structure()
@@ -85,7 +84,6 @@ class CapacityMarketClearing(MarketModule):
                         clearing_price = ppdp.price
                         ppdp.status = globalNames.power_plant_dispatch_plan_status_accepted
                         ppdp.accepted_amount = ppdp.amount
-                        print("accepted plant test")
 
                     elif ppdp.price < sdc.get_price_at_volume(total_supply):
                         clearing_price = ppdp.price

@@ -324,7 +324,7 @@ class Repository:
     def get_sorted_bids_by_market_and_time(self, market: Market, time: int) -> \
             List[PowerPlantDispatchPlan]:
         return sorted([i for i in self.bids.values()
-                       if i.market.name == market.name and i.tick == time], key=lambda i: i.price)
+                       if i.market == market.name and i.tick == time], key=lambda i: i.price)
 
     def get_power_plant_dispatch_plans_by_plant(self, plant: PowerPlant) -> List[PowerPlantDispatchPlan]:
         return [i for i in self.power_plant_dispatch_plans.values() if i.plant == plant]
@@ -351,9 +351,9 @@ class Repository:
             name = str(datetime.now())
             bid = Bid(name)
 
-        bid.plant = plant
-        bid.bidder = bidder
-        bid.market = market
+        bid.plant = plant.name
+        bid.bidder = bidder.name
+        bid.market = market.name
         bid.amount = amount
         bid.price = price
         bid.status = globalNames.power_plant_dispatch_plan_status_awaiting
@@ -555,10 +555,12 @@ class Repository:
     #     return [i for i in self.power_plants.values() if
     #             i.status == globalNames.power_plant_status_strategic_reserve]
     # i.name in self.StrategicReserveOperator.getPlants()]
+    #
+
 
 
     def create_or_update_StrategicReserveOperator(self, name: str,
-                                                  zone: Zone,
+                                                  zone: str,
                                                   priceSR: float,
                                                   percentSR: float,
                                                   volumeSR: float,

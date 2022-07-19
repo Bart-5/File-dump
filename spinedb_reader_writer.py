@@ -251,12 +251,12 @@ class SpineDBReaderWriter:
     def stage_bids(self, bid: Bid, current_tick: int):
         self.stage_object(self.bids_classname, bid.name)
         self.stage_object_parameter_values(self.bids_classname, bid.name,
-                                           [('plant', bid.plant.name),
-                                            ('market', bid.market.name),
+                                           [('plant', bid.plant),
+                                            ('market', bid.market),
                                             ('price', bid.price),
                                             ('amount', bid.amount),
                                             ('tick', bid.tick),
-                                            ('bidder', bid.bidder.name),
+                                            ('bidder', bid.bidder),
                                             ('accepted_amount', bid.accepted_amount),
                                             ('status', bid.status)], current_tick)
 
