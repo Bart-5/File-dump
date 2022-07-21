@@ -581,6 +581,21 @@ class Repository:
         self.dbrw.stage_sr_operator(SRO)
         return SRO
 
+    def update_power_plant_status_ger_first_year(self, plant: PowerPlant, price):
+        new_status = globalNames.power_plant_status_strategic_reserve
+        new_owner = 'StrategicReserveOperator'
+        new_price = price
+        for i in self.power_plants.values():
+            if i.name == plant:
+                new_age = i.technology.expected_lifetime - 4
+                i.age = new_age
+                i.status = new_status
+                i.owner = new_owner
+                i.technology.variable_operating_costs = new_price
+                self.power_plants[i.name] = i
+                self.dbrw.stage_power_plant_status(i)
+
+
     # def set_power_plants_in_SR(self, plant):
     #     self.plants_in_SR.append(plant)
     #

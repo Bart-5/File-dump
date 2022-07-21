@@ -16,8 +16,11 @@ from modules.payments import PayAndBankCO2Allowances, UseCO2Allowances
 from modules.prepareMarketClearing import PrepareMarket
 from util.spinedb_reader_writer import *
 from modules.capacitymarket import *
+from modules.forwardcapacitymarket import *
 from domain.StrategicReserveOperator import *
 from modules.strategicreserve_new import *
+from modules.strategicreserve_swe import *
+from modules.strategicreserve_ger import *
 # from modules.strategicreserve import *
 from modules.co2market import *
 from modules.invest import *
@@ -33,7 +36,10 @@ logging.basicConfig(filename='logs/' + str(round(time.time() * 1000)) + '-log.tx
 #logging.getLogger().addHandler(logging.StreamHandler())
 logging.info('Starting EM-Lab Run')
 run_capacity_market = False
+run_forward_market = False
 run_strategic_reserve = False
+run_strategic_reserve_swe = False
+run_strategic_reserve_ger = False
 run_electricity_spot_market = False
 run_future_market = False
 run_co2_market = False
@@ -53,8 +59,14 @@ run_create_results = False
 for arg in sys.argv[3:]:
     if arg == 'run_capacity_market':
         run_capacity_market = True
+    if arg == 'run_forward_market':
+        run_forward_market = True
     if arg == 'run_strategic_reserve':
         run_strategic_reserve = True
+    if arg == 'run_strategic_reserve_swe':
+        run_strategic_reserve_swe = True
+    if arg == 'run_strategic_reserve_ger':
+        run_strategic_reserve_ger = True
     if arg == 'run_future_market':
         run_future_market = True
     if arg == 'run_co2_market':
@@ -164,12 +176,40 @@ try:  # Try statement to always close DB properly
         capacity_market_clear.act_and_commit()
         logging.info('End Run Capacity Market')
 
+    if run_forward_market:
+        logging.info('Start Run Capacity Market')
+        capacity_market_submit_bids = ForwardCapacityMarketSubmitBids(reps)  # This function stages new dispatch power plant
+        capacity_market_clear = ForwardCapacityMarketClearing(reps)  # This function adds rep to class capacity markets
+        capacity_market_submit_bids.act_and_commit()
+        capacity_market_clear.act_and_commit()
+        logging.info('End Run Capacity Market')
+
     if run_strategic_reserve:
         logging.info('Start strategic reserve')
         strategic_reserve_submit_bids = StrategicReserveSubmitBids(reps)
         # strategic_reserve_assignment = StrategicReserveAssignment(reps)
         strategic_reserve_operator = StrategicReserveOperator('StrategicReserveOperator')
         strategic_reserve = StrategicReserveAssignment(reps, strategic_reserve_operator)  # This function adds rep to class capacity markets
+        strategic_reserve_submit_bids.act_and_commit()
+        strategic_reserve.act_and_commit()
+        logging.info('End strategic reserve')
+
+    if run_strategic_reserve_swe:
+        logging.info('Start strategic reserve')
+        strategic_reserve_submit_bids = StrategicReserveSubmitBids_swe(reps)
+        # strategic_reserve_assignment = StrategicReserveAssignment_swe(reps)
+        strategic_reserve_operator = StrategicReserveOperator('StrategicReserveOperator')
+        strategic_reserve = StrategicReserveAssignment_swe(reps, strategic_reserve_operator)  # This function adds rep to class capacity markets
+        strategic_reserve_submit_bids.act_and_commit()
+        strategic_reserve.act_and_commit()
+        logging.info('End strategic reserve')
+
+    if run_strategic_reserve_ger:
+        logging.info('Start strategic reserve')
+        strategic_reserve_submit_bids = StrategicReserveSubmitBids_ger(reps)
+        # strategic_reserve_assignment = StrategicReserveAssignment_ger(reps)
+        strategic_reserve_operator = StrategicReserveOperator('StrategicReserveOperator')
+        strategic_reserve = StrategicReserveAssignment_ger(reps, strategic_reserve_operator)  # This function adds rep to class capacity markets
         strategic_reserve_submit_bids.act_and_commit()
         strategic_reserve.act_and_commit()
         logging.info('End strategic reserve')
