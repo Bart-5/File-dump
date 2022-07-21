@@ -74,7 +74,10 @@ class StrategicReserveAssignment_ger(MarketModule):
             # Contract plants to Strategic Reserve Operator
             contracted_strategic_reserve_capacity = 0
             SRO_name = "SRO_" + market.parameters['zone']
-            SR_operator = self.reps.sr_operator[SRO_name]
+            try:
+                SR_operator = self.reps.sr_operator[SRO_name]
+            except:
+                SR_operator = self.operator
 
             for ppdp in sorted_ppdp:
                 # If plants are already in strategic reserve they have to be until end of life
