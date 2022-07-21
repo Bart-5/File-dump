@@ -16,7 +16,7 @@ from modules.payments import PayAndBankCO2Allowances, UseCO2Allowances
 from modules.prepareMarketClearing import PrepareMarket
 from util.spinedb_reader_writer import *
 from modules.capacitymarket import *
-from modules.forwardcapacitymarket import *
+# from modules.forwardcapacitymarket import *
 from domain.StrategicReserveOperator import *
 from modules.strategicreserve_new import *
 from modules.strategicreserve_swe import *
@@ -36,7 +36,7 @@ logging.basicConfig(filename='logs/' + str(round(time.time() * 1000)) + '-log.tx
 #logging.getLogger().addHandler(logging.StreamHandler())
 logging.info('Starting EM-Lab Run')
 run_capacity_market = False
-run_forward_market = False
+# run_forward_market = False
 run_strategic_reserve = False
 run_strategic_reserve_swe = False
 run_strategic_reserve_ger = False
@@ -59,8 +59,8 @@ run_create_results = False
 for arg in sys.argv[3:]:
     if arg == 'run_capacity_market':
         run_capacity_market = True
-    if arg == 'run_forward_market':
-        run_forward_market = True
+    # if arg == 'run_forward_market':
+    #     run_forward_market = True
     if arg == 'run_strategic_reserve':
         run_strategic_reserve = True
     if arg == 'run_strategic_reserve_swe':
@@ -87,7 +87,7 @@ for arg in sys.argv[3:]:
         run_create_results = True
 
 # following modules need the results from AMIRIS that are being stored in a DB
-if run_short_investment_module or run_capacity_market or run_strategic_reserve:
+if run_short_investment_module or run_capacity_market or run_strategic_reserve or run_strategic_reserve_swe or run_strategic_reserve_ger:
     emlab_url = sys.argv[1]
     logging.info('emlab database: %s' , str(emlab_url))
     amiris_url = sys.argv[2]
@@ -176,13 +176,13 @@ try:  # Try statement to always close DB properly
         capacity_market_clear.act_and_commit()
         logging.info('End Run Capacity Market')
 
-    if run_forward_market:
-        logging.info('Start Run Capacity Market')
-        capacity_market_submit_bids = ForwardCapacityMarketSubmitBids(reps)  # This function stages new dispatch power plant
-        capacity_market_clear = ForwardCapacityMarketClearing(reps)  # This function adds rep to class capacity markets
-        capacity_market_submit_bids.act_and_commit()
-        capacity_market_clear.act_and_commit()
-        logging.info('End Run Capacity Market')
+    # if run_forward_market:
+    #     logging.info('Start Run Capacity Market')
+    #     capacity_market_submit_bids = ForwardCapacityMarketSubmitBids(reps)  # This function stages new dispatch power plant
+    #     capacity_market_clear = ForwardCapacityMarketClearing(reps)  # This function adds rep to class capacity markets
+    #     capacity_market_submit_bids.act_and_commit()
+    #     capacity_market_clear.act_and_commit()
+    #     logging.info('End Run Capacity Market')
 
     if run_strategic_reserve:
         logging.info('Start strategic reserve')
@@ -256,5 +256,5 @@ finally:
     logging.info('Closing database connections...')
     print("finished emlab")
     spinedb_reader_writer.db.close_connection()
-    if run_short_investment_module or run_capacity_market or run_strategic_reserve:
+    if run_short_investment_module or run_capacity_market or run_strategic_reserve or run_strategic_reserve_swe or run_strategic_reserve_ger:
         spinedb_reader_writer.amirisdb.close_connection()
