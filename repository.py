@@ -595,6 +595,11 @@ class Repository:
                 self.power_plants[i.name] = i
                 self.dbrw.stage_power_plant_status(i)
 
+    def get_operational_and_in_pipeline_power_plants_by_owner(self, owner: EnergyProducer) -> List[PowerPlant]:
+        return [i for i in self.power_plants.values()
+                if i.owner.name == owner and (
+                        i.status == globalNames.power_plant_status_operational or i.status == globalNames.power_plant_status_inPipeline)]
+
 
     # def set_power_plants_in_SR(self, plant):
     #     self.plants_in_SR.append(plant)
