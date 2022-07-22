@@ -6,6 +6,8 @@ Sanchez 31-05-2022
 """
 import json
 import logging
+import numpy as np
+from scipy import interpolate
 
 from util import globalNames
 from domain.cashflow import CashFlow
@@ -71,9 +73,13 @@ class ForwardCapacityMarketClearing(MarketModule):
             peak_load = max(
                 self.reps.get_hourly_demand_by_power_grid_node_and_year(market.parameters['zone'])[
                     1])  # todo later it should be also per year
-            expectedDemandFactor = self.reps.dbrw.get_calculated_simulated_fuel_prices_by_year("electricity",
+            try:
+                expectedDemandFactor = self.reps.dbrw.get_calculated_simulated_fuel_prices_by_year("electricity",
                                                                                                globalNames.simulated_prices,
                                                                                                future_year)
+            except:
+                expectedDemandFactor = self.get_extrapolated_demand_factor(self.reps.current_year, future_year)
+
             peakExpectedDemand = peak_load * (expectedDemandFactor)
 
             sdc = market.get_sloping_demand_curve(peakExpectedDemand)
@@ -129,20 +135,7 @@ class ForwardCapacityMarketClearing(MarketModule):
                                                                     self.operator.getPlants())
             else:
                 print("Market is not cleared")
-            # logging.WARN("market uncleared at price %s at volume %s ",  str(clearing_price), str(total_supply))
 
-            # VERIFICATION #
-            #
-            # clearingPoint  = self.reps.get_market_clearing_point_price_for_market_and_time(market,self.reps.current_tick)
-            # q1 = clearingPoint.volume
-            # q2 = peakExpectedDemand * (1 - SlopingDemandCurve.lm) + (
-            #             (SlopingDemandCurve.price_cap - clearingPoint.price ) * (
-            #         SlopingDemandCurve.um + SlopingDemandCurve.lm) * peakExpectedDemand ) / SlopingDemandCurve.price_cap
-            # q3 = ((clearingPoint.price - SlopingDemandCurve.price_cap) / - SlopingDemandCurve.m) + SlopingDemandCurve.lm_volume
-            # if q1 == q2:
-            #     logging.WARN("matches")
-            # else:
-            #     logging.WARN("does not match")
 
     def createCashFlowforCM(self, market, clearing_price, future_tick):
         accepted_ppdp = self.reps.get_accepted_CM_bids()
@@ -151,4 +144,19 @@ class ForwardCapacityMarketClearing(MarketModule):
             self.reps.createCashFlow(market, self.reps.energy_producers[accepted.bidder], accepted.accepted_amount * clearing_price,
                                      "CAPMARKETPAYMENT", future_tick,
                                      self.reps.power_plants[accepted.plant])
+
+    def get_extrapolated_demand_factor(self, current_year, future_year):
+        demand_factor = []
+        x = []
+        i = -4
+        while i <= 0:
+            year = current_year + i
+            x.append(year)
+            demand_factor.append(self.reps.dbrw.get_calculated_simulated_fuel_prices_by_year("electricity",
+                                                                                             globalNames.simulated_prices,
+                                                                                             year))
+            i += 1
+
+        extrapolated_demand_factor = interpolate.interp1d(x, demand_factor, fill_value='extrapolate')
+        return extrapolated_demand_factor(future_year)
 
