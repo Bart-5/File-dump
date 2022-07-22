@@ -12,6 +12,7 @@ from domain.cashflow import CashFlow
 from modules.marketmodule import MarketModule
 from util.repository import Repository
 from domain.markets import SlopingDemandCurve
+from domain.StrategicReserveOperator import StrategicReserveOperator
 
 
 class ForwardCapacityMarketSubmitBids(MarketModule):
@@ -55,8 +56,10 @@ class ForwardCapacityMarketClearing(MarketModule):
     The class that clears the Capacity Market based on the Sloping Demand curve
     """
 
-    def __init__(self, reps: Repository):
+    def __init__(self, reps: Repository, operator: StrategicReserveOperator):
         super().__init__('EM-Lab Capacity Market: Clear Market', reps)
+        reps.dbrw.stage_init_sr_operator_structure()
+        self.operator = operator
         self.isTheMarketCleared = False
 
     def act(self):
@@ -78,14 +81,31 @@ class ForwardCapacityMarketClearing(MarketModule):
 
             clearing_price = 0
             total_supply = 0
+            self.operator.setZone(market.parameters['zone'])
+            CMO_name = "CMO_" + market.parameters['zone']
+            try:
+                CM_operator = self.reps.sr_operator[CMO_name]
+            except:
+                CM_operator = self.operator
+
             # Set the clearing price through the merit order
             for ppdp in sorted_ppdp:
                 if self.isTheMarketCleared == False:
-                    if ppdp.price <= sdc.get_price_at_volume(total_supply + ppdp.amount):
+                    plant = self.reps.power_plants[ppdp.plant]
+                    if ppdp.plant in CM_operator.list_of_plants and plant.age < 15:
                         total_supply += ppdp.amount
                         clearing_price = ppdp.price
                         ppdp.status = globalNames.power_plant_dispatch_plan_status_accepted
                         ppdp.accepted_amount = ppdp.amount
+                        self.operator.setPlants(ppdp.plant)
+
+                    elif ppdp.price <= sdc.get_price_at_volume(total_supply + ppdp.amount):
+                        total_supply += ppdp.amount
+                        clearing_price = ppdp.price
+                        ppdp.status = globalNames.power_plant_dispatch_plan_status_accepted
+                        ppdp.accepted_amount = ppdp.amount
+                        if plant.status == globalNames.power_plant_status_inPipeline:
+                            self.operator.setPlants(ppdp.plant)
 
                     elif ppdp.price < sdc.get_price_at_volume(total_supply):
                         clearing_price = ppdp.price
@@ -93,6 +113,7 @@ class ForwardCapacityMarketClearing(MarketModule):
                         ppdp.accepted_amount = sdc.get_volume_at_price(clearing_price) - total_supply
                         total_supply += sdc.get_volume_at_price(clearing_price)
                         self.isTheMarketCleared = True
+
                 else:
                     ppdp.status = globalNames.power_plant_dispatch_plan_status_failed
                     ppdp.accepted_amount = 0
@@ -103,6 +124,9 @@ class ForwardCapacityMarketClearing(MarketModule):
                 self.reps.create_or_update_market_clearing_point(market, clearing_price, total_supply,
                                                                  future_tick)
                 self.createCashFlowforCM(market, clearing_price, future_tick)
+                self.reps.create_or_update_StrategicReserveOperator(CMO_name, self.operator.getZone(),
+                                                                    0, 0, 0, 0,
+                                                                    self.operator.getPlants())
             else:
                 print("Market is not cleared")
             # logging.WARN("market uncleared at price %s at volume %s ",  str(clearing_price), str(total_supply))
