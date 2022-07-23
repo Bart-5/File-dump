@@ -119,6 +119,11 @@ class ForwardCapacityMarketClearing(MarketModule):
                         ppdp.accepted_amount = sdc.get_volume_at_price(clearing_price) - total_supply
                         total_supply += sdc.get_volume_at_price(clearing_price)
                         self.isTheMarketCleared = True
+                        if plant.status == globalNames.power_plant_status_inPipeline:
+                            self.operator.setPlants(ppdp.plant)
+
+                    elif ppdp.price > sdc.get_price_at_volume(total_supply):
+                        self.isTheMarketCleared = True
 
                 else:
                     ppdp.status = globalNames.power_plant_dispatch_plan_status_failed
@@ -129,7 +134,7 @@ class ForwardCapacityMarketClearing(MarketModule):
             if self.isTheMarketCleared == True:
                 self.reps.create_or_update_market_clearing_point(market, clearing_price, total_supply,
                                                                  future_tick)
-                self.createCashFlowforCM(market, clearing_price, future_tick)
+                self.createCashFlowforCM(market, clearing_price)
                 self.reps.create_or_update_StrategicReserveOperator(CMO_name, self.operator.getZone(),
                                                                     0, 0, 0, 0,
                                                                     self.operator.getPlants())
@@ -137,12 +142,12 @@ class ForwardCapacityMarketClearing(MarketModule):
                 print("Market is not cleared")
 
 
-    def createCashFlowforCM(self, market, clearing_price, future_tick):
+    def createCashFlowforCM(self, market, clearing_price):
         accepted_ppdp = self.reps.get_accepted_CM_bids()
         for accepted in accepted_ppdp:
             # from_agent, to, amount, type, time, plant
             self.reps.createCashFlow(market, self.reps.energy_producers[accepted.bidder], accepted.accepted_amount * clearing_price,
-                                     "CAPMARKETPAYMENT", future_tick,
+                                     "CAPMARKETPAYMENT", self.reps.current_tick,
                                      self.reps.power_plants[accepted.plant])
 
     def get_extrapolated_demand_factor(self, current_year, future_year):
