@@ -31,7 +31,7 @@ class ForwardCapacityMarketSubmitBids(MarketModule):
         for energy_producer in self.reps.energy_producers.values():
 
             # For every PowerPlant owned by energyProducer
-            for powerplant in self.reps.get_operational_and_in_pipeline_power_plants_by_owner(energy_producer.name):
+            for powerplant in self.reps.get_operational_and_in_pipeline_conventional_power_plants_by_owner(energy_producer.name):
                 # Retrieve vars
 
                 market = self.reps.get_capacity_market_for_plant(powerplant)
@@ -69,7 +69,6 @@ class ForwardCapacityMarketClearing(MarketModule):
             print("capacity clearing")
             # Calculate the peak load for 4 years in the future
             future_year = self.reps.current_year + 4
-            future_tick = self.reps.current_tick + 4
             peak_load = max(
                 self.reps.get_hourly_demand_by_power_grid_node_and_year(market.parameters['zone'])[
                     1])  # todo later it should be also per year
@@ -129,11 +128,11 @@ class ForwardCapacityMarketClearing(MarketModule):
                     ppdp.status = globalNames.power_plant_dispatch_plan_status_failed
                     ppdp.accepted_amount = 0
 
-            self.reps.dbrw.set_power_plant_CapacityMarket_production(sorted_ppdp, future_tick)
+            self.reps.dbrw.set_power_plant_CapacityMarket_production(sorted_ppdp, self.reps.current_tick)
             # save clearing point
             if self.isTheMarketCleared == True:
                 self.reps.create_or_update_market_clearing_point(market, clearing_price, total_supply,
-                                                                 future_tick)
+                                                                 self.reps.current_tick)
                 self.createCashFlowforCM(market, clearing_price)
                 self.reps.create_or_update_StrategicReserveOperator(CMO_name, self.operator.getZone(),
                                                                     0, 0, 0, 0,

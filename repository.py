@@ -595,10 +595,12 @@ class Repository:
                 self.power_plants[i.name] = i
                 self.dbrw.stage_power_plant_status(i)
 
-    def get_operational_and_in_pipeline_power_plants_by_owner(self, owner: EnergyProducer) -> List[PowerPlant]:
+    def get_operational_and_in_pipeline_conventional_power_plants_by_owner(self, owner: EnergyProducer) -> List[PowerPlant]:
         return [i for i in self.power_plants.values()
-                if i.owner.name == owner and (
-                        i.status == globalNames.power_plant_status_operational or i.status == globalNames.power_plant_status_inPipeline)]
+                if i.owner.name == owner and \
+                (i.age+4) <= i.technology.expected_lifetime and \
+                i.technology.type == 'ConventionalPlantOperator' and \
+                (i.status == globalNames.power_plant_status_operational or i.status == globalNames.power_plant_status_inPipeline)]
 
 
     # def set_power_plants_in_SR(self, plant):
