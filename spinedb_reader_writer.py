@@ -24,17 +24,16 @@ class SpineDBReaderWriter:
     def __init__(self, open_db, *db_urls: str):
         self.db_urls = db_urls
         self.db = SpineDB(db_urls[0])  # the first is always emlab
-        print("DB", db_urls[0])
         self.powerplant_installed_classname = 'PowerPlantsInstalled'
         self.powerplantprofits_classname =  'Profits'
         self.candidate_powerplant_installed_classname = 'CandidatePowerPlants'
         self.powerplant_dispatch_plan_classname = 'PowerPlantDispatchPlans'
         self.bids_classname = 'Bids'
-        self.sro_classname = 'StrategicReserveOperators'
         self.market_clearing_point_object_classname = 'MarketClearingPoints'
         self.financial_reports_object_classname = 'financialPowerPlantReports'
         self.candidate_plants_NPV_classname = "CandidatePlantsNPV"
         self.investment_decisions_classname = "InvestmentDecisions"
+        self.sro_classname = 'StrategicReserveOperators'
         self.fuel_classname = "node"
         self.configuration_object_classname = "Configuration"
         self.energyProducer_classname = "EnergyProducers"
@@ -73,16 +72,25 @@ class SpineDBReaderWriter:
                 reps.simulation_length = reps.end_simulation_year - reps.start_simulation_year
             elif row['parameter_name'] == 'Look Ahead':
                 reps.lookAhead = int(row['parameter_value'])
+            elif row['parameter_name'] == 'pastTimeHorizon':
+                reps.pastTimeHorizon = int(row['parameter_value'])
             elif row['parameter_name'] == 'CurrentYear':
                 reps.current_year = int(row['parameter_value'])
             elif row['parameter_name'] == 'InvestmentIteration':
                 reps.investmentIteration = int(row['parameter_value'])
             elif row['parameter_name'] == 'Country':  # changed from node(emlab) to country because in traderes Node is used for fuels
-                reps.country = row['parameter_value']
+                reps.country = str(row['parameter_value'])
+                reps.agent = "Producer" + reps.country
             elif row['parameter_name'] == 'short_term_investment_minimal_irr':
                 reps.short_term_investment_minimal_irr = row['parameter_value']
             elif row['parameter_name'] == 'start_year_fuel_trends':
-                reps.start_year_fuel_trends = row['parameter_value']
+                reps.start_year_fuel_trends = int(row['parameter_value'])
+            elif row['parameter_name'] == 'start_year_dismantling':
+                reps.start_year_dismantling = int(row['parameter_value'])
+            elif row['parameter_name'] == 'maximum_investment_capacity_per_year':
+                reps.maximum_investment_capacity_per_year = int(row['parameter_value'])
+            elif row['parameter_name'] == 'max_permit_build_time':
+                reps.max_permit_build_time =  int(row['parameter_value'])
 
         reps.dictionaryFuelNames = {i['parameter_name']: i['parameter_value'] for i
                                     in
@@ -210,7 +218,6 @@ class SpineDBReaderWriter:
                                            [("Id", object_name),
                                             ('Age', powerplant.age),
                                             ('Efficiency', powerplant.actualEfficiency),
-                                            ('DischargingEfficiency', powerplant.dischargingEfficiency),
                                             ('Capacity', powerplant.capacity),
                                             ('Location', powerplant.location),
                                             ('Owner', powerplant.owner.name),
@@ -260,6 +267,22 @@ class SpineDBReaderWriter:
                                             ('accepted_amount', bid.accepted_amount),
                                             ('status', bid.status)], current_tick)
 
+    def stage_init_sr_operator_structure(self):
+        self.stage_object_class(self.sro_classname)
+        self.stage_object_parameters(self.sro_classname,
+                                     ['zone', 'strategic_reserve_price', 'strategic_reserve_volume_percent',
+                                      'strategic_reserve_volume', 'cash', 'list_of_plants', "tick"])
+
+    def stage_sr_operator(self, SRO: StrategicReserveOperator):
+        self.stage_object(self.sro_classname, SRO.name)
+        self.stage_object_parameter_values(self.sro_classname, SRO.name,
+                                           [('zone', SRO.zone),
+                                            ('strategic_reserve_price', SRO.reservePriceSR),
+                                            ('strategic_reserve_volume_percent', SRO.reserveVolumePercentSR),
+                                            ('strategic_reserve_volume', SRO.reserveVolume),
+                                            ('cash', SRO.cash),
+                                            ('list_of_plants', SRO.list_of_plants)], "0")
+
     def stage_init_candidate_plants_value(self, iteration, futureYear):
         year_iteration = str(futureYear) + "-" + str(iteration)
         self.stage_object_class(self.candidate_plants_NPV_classname)
@@ -289,7 +312,7 @@ class SpineDBReaderWriter:
         self.stage_object_parameters(self.powerplantprofits_classname, ["Profits", "PowerPlants"])
 
     def stage_power_plant_results(self, reps, pp_numbers,  pp_profits):
-        # the simulation tick is the object name, the iteration is the parameter
+        # object name =  simulation tick  - iteration
         objectname = str(reps.current_tick) + "-" + str(reps.investmentIteration)
         self.stage_object(self.powerplantprofits_classname, objectname)
         self.stage_object_parameter_values(self.powerplantprofits_classname, objectname,
@@ -305,23 +328,6 @@ class SpineDBReaderWriter:
     def stage_iteration(self, nextinvestmentIteration):
         self.stage_object_parameter_values(self.configuration_object_classname, "SimulationYears",
                                            [("InvestmentIteration", nextinvestmentIteration)], "0")
-
-    def stage_init_sr_operator_structure(self):
-        self.stage_object_class(self.sro_classname)
-        self.stage_object_parameters(self.sro_classname,
-                                     ['zone', 'strategic_reserve_price', 'strategic_reserve_volume_percent',
-                                      'strategic_reserve_volume', 'cash', 'list_of_plants', "tick"])
-
-    def stage_sr_operator(self, SRO: StrategicReserveOperator):
-        self.stage_object(self.sro_classname, SRO.name)
-        self.stage_object_parameter_values(self.sro_classname, SRO.name,
-                                           [('zone', SRO.zone),
-                                            ('strategic_reserve_price', SRO.reservePriceSR),
-                                            ('strategic_reserve_volume_percent', SRO.reserveVolumePercentSR),
-                                            ('strategic_reserve_volume', SRO.reserveVolume),
-                                            ('cash', SRO.cash),
-                                            ('list_of_plants', SRO.list_of_plants)], "0")
-
 
     """
     Financial results
@@ -429,7 +435,6 @@ class SpineDBReaderWriter:
 
     def stage_object_parameter_values(self,
                                       object_class_name: str, object_name: str, arr_of_tuples: list, alternative: int):
-
         import_arr = [(object_class_name, object_name, i[0], i[1], str(alternative)) for i in arr_of_tuples]
         self.db.import_object_parameter_values(import_arr)
 
@@ -535,8 +540,6 @@ def add_parameter_value_to_repository_based_on_object_class_name(reps, db_line):
         add_parameter_value_to_repository(reps, db_line, reps.electricity_spot_markets, ElectricitySpotMarket)
     elif object_class_name == 'Bids':
         add_parameter_value_to_repository(reps, db_line, reps.bids, Bid)
-    elif object_class_name == 'StrategicReserveOperators':
-        add_parameter_value_to_repository(reps, db_line, reps.sr_operator, StrategicReserveOperator)
     elif object_class_name == 'MarketClearingPoints':
         add_parameter_value_to_repository(reps, db_line, reps.market_clearing_points, MarketClearingPoint)
     elif object_class_name == 'CandidatePlantsNPV' and reps.dbrw.read_investments == True:
@@ -553,6 +556,8 @@ def add_parameter_value_to_repository_based_on_object_class_name(reps, db_line):
         new_db_line[4] = iteration  # alternative
         add_parameter_value_to_repository(reps, new_db_line, reps.financialPowerPlantReports, FinancialPowerPlantReport)
 
+    elif object_class_name == 'StrategicReserveOperators':
+        add_parameter_value_to_repository(reps, db_line, reps.sr_operator, StrategicReserveOperator)
     else:
         logging.info('Object Class not defined: ' + object_class_name)
 
@@ -576,6 +581,6 @@ def add_parameter_value_to_repository_based_on_object_class_name_amiris(self, re
     for db_line_amiris in db_amirisdata['object_parameter_values']:
         object_class_name = db_line_amiris[0]
         object_name = db_line_amiris[1]
-        if object_class_name == reps.current_year:
+        if int(object_class_name) == reps.current_year: # importing only the current power dispatch plans
             add_parameter_value_to_repository(reps, db_line_amiris, reps.power_plant_dispatch_plans,
                                               PowerPlantDispatchPlan)

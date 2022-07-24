@@ -27,7 +27,6 @@ from modules.invest import *
 from modules.prepareFutureMarketClearing import *
 from modules.dismantle import *
 from modules.createresults import *
-
 # Initialize Logging
 if not os.path.isdir('logs'):
     os.makedirs('logs')
@@ -51,7 +50,6 @@ run_financial_results = False
 run_prepare_next_year_market_clearing = False
 run_initialize_power_plants = False
 run_create_results = False
-
 # Loop over provided arguments and select modules
 # Depending on which booleans have been set to True, these modules will be run
 # logging.info('Selected modules: ' + str(sys.argv[2:]))
@@ -85,7 +83,6 @@ for arg in sys.argv[3:]:
         run_initialize_power_plants = True
     if arg == 'run_create_results':
         run_create_results = True
-
 # following modules need the results from AMIRIS that are being stored in a DB
 if run_short_investment_module or run_capacity_market or run_strategic_reserve or run_strategic_reserve_swe or run_strategic_reserve_ger or run_forward_market:
     emlab_url = sys.argv[1]
