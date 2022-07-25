@@ -1,7 +1,6 @@
 """
 The Repository: home of all objects that play a part in the model.
 All objects are read through the SpineDBReader and stored in the Repository.
-
 Jim Hommes - 25-3-2021
 Ingrid Sanchez 16-2-2022
 """
@@ -35,6 +34,7 @@ class Repository:
         Initialize all Repository variables
         """
         #self.node = ""
+        # section --------------------------------------------------------------------------------------configuration
         self.country = ""
         self.dbrw = None
         self.agent = ""      # TODO if there would be more agents, the future capacity should be analyzed per agent
@@ -52,6 +52,9 @@ class Repository:
         self.investmentIteration = 0
         self.maximum_investment_capacity_per_year = 0
         self.max_permit_build_time = 0
+        self.runningModule = ""
+        # --------------------------------------------------------------------------------------------------
+
         self.dictionaryFuelNames = dict()
         self.dictionaryFuelNumbers = dict()
         self.dictionaryTechNumbers = dict()
@@ -191,8 +194,11 @@ class Repository:
         except StopIteration:
             return None
 
-        return
-
+    def get_financial_report_for_plant(self, plant_name):
+        try:
+            return next(i for i in self.financialPowerPlantReports.values() if i.name == plant_name)
+        except StopIteration:
+            return None
     # ----------------------------------------------------------------------------section technologies
     # PowerGeneratingTechnologies
     def get_power_generating_technology_by_techtype_and_fuel(self, techtype: str, fuel: str):
@@ -244,6 +250,12 @@ class Repository:
     def get_unique_candidate_technologies_names(self):
         try:
             return [i.technology.name for name, i in self.candidatePowerPlants.items()]
+        except StopIteration:
+            return None
+
+    def get_unique_candidate_technologies(self):
+        try:
+            return [i.technology for name, i in self.candidatePowerPlants.items()]
         except StopIteration:
             return None
 
@@ -443,7 +455,7 @@ class Repository:
         bid.accepted_amount = 0
         bid.tick = time
         self.bids[bid.name] = bid
-        self.dbrw.stage_bids(bid, time)
+        self.dbrw.stage_bids(bid)
         return bid
 
     def update_installed_pp_results(self, installed_pp_results):
@@ -559,12 +571,6 @@ class Repository:
                 self.power_plants[i.name] = i
                 self.dbrw.stage_power_plant_status(i)
 
-    # def get_power_plants_in_SR(self) -> List[StrategicReserveOperator]:
-    #     return [i for i in self.power_plants.values() if
-    #             i.status == globalNames.power_plant_status_strategic_reserve]
-    # i.name in self.StrategicReserveOperator.getPlants()]
-    #
-
 
 
     def create_or_update_StrategicReserveOperator(self, name: str,
@@ -609,8 +615,6 @@ class Repository:
                 (i.age+4) <= i.technology.expected_lifetime and \
                 i.technology.type == 'ConventionalPlantOperator' and \
                 (i.status == globalNames.power_plant_status_operational or i.status == globalNames.power_plant_status_inPipeline)]
-
-
 
 
 

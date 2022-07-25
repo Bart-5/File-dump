@@ -16,6 +16,7 @@ from modules.payments import PayAndBankCO2Allowances, UseCO2Allowances
 from modules.prepareMarketClearing import PrepareMarket
 from util.spinedb_reader_writer import *
 from modules.capacitymarket import *
+from domain.StrategicReserveOperator import *
 from modules.forwardcapacitymarket import *
 from domain.StrategicReserveOperator import *
 from modules.strategicreserve_new import *
@@ -84,7 +85,7 @@ for arg in sys.argv[3:]:
     if arg == 'run_create_results':
         run_create_results = True
 # following modules need the results from AMIRIS that are being stored in a DB
-if run_short_investment_module or run_capacity_market or run_strategic_reserve or run_strategic_reserve_swe or run_strategic_reserve_ger or run_forward_market:
+if run_short_investment_module or run_capacity_market or run_strategic_reserve or run_financial_results or run_strategic_reserve_swe or run_strategic_reserve_ger or run_forward_market:
     emlab_url = sys.argv[1]
     logging.info('emlab database: %s' , str(emlab_url))
     amiris_url = sys.argv[2]
@@ -96,7 +97,7 @@ else:
     spinedb_reader_writer = SpineDBReaderWriter("none", emlab_url)
 
 try:  # Try statement to always close DB properly
-    reps = spinedb_reader_writer.read_db_and_create_repository()  # Load repository
+    reps = spinedb_reader_writer.read_db_and_create_repository(sys.argv[3])  # Load repository
     # Ignore decommissioned power plants
     reps.power_plants = {p : power_plant for p, power_plant in reps.power_plants.items() if power_plant.name not in (
         reps.decommissioned["Decommissioned"]).Decommissioned}
@@ -254,5 +255,5 @@ finally:
     logging.info('Closing database connections...')
     print("finished emlab")
     spinedb_reader_writer.db.close_connection()
-    if run_short_investment_module or run_capacity_market or run_strategic_reserve or run_strategic_reserve_swe or run_strategic_reserve_ger or run_forward_market:
+    if run_short_investment_module or run_capacity_market or run_strategic_reserve or run_financial_results or run_strategic_reserve_swe or run_strategic_reserve_ger or run_forward_market:
         spinedb_reader_writer.amirisdb.close_connection()
