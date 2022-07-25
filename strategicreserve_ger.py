@@ -55,10 +55,10 @@ class StrategicReserveAssignment_ger(MarketModule):
         # Assign plants to Strategic Reserve per region
         for market in self.reps.capacity_markets.values():
             # Set the strategic reserve zone to the same as the market
-            self.operator.setZone(market.parameters['zone'])
+            self.operator.setZone(market.zone)
 
             # Retrieve peak load volume of market
-            peak_load_without_trend = max(self.reps.get_hourly_demand_by_power_grid_node_and_year(market.parameters['zone'])[1])
+            peak_load_without_trend = max(self.reps.get_hourly_demand_by_power_grid_node_and_year(market.zone)[1])
             trend = self.reps.dbrw.get_calculated_simulated_fuel_prices_by_year("electricity", globalNames.simulated_prices, self.reps.current_year)
             peak_load_volume = peak_load_without_trend * trend
 
@@ -73,7 +73,7 @@ class StrategicReserveAssignment_ger(MarketModule):
 
             # Contract plants to Strategic Reserve Operator
             contracted_strategic_reserve_capacity = 0
-            SRO_name = "SRO_" + market.parameters['zone']
+            SRO_name = "SRO_" + market.zone
             try:
                 SR_operator = self.reps.sr_operator[SRO_name]
             except:

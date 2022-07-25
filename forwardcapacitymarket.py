@@ -70,7 +70,7 @@ class ForwardCapacityMarketClearing(MarketModule):
             # Calculate the peak load for 4 years in the future
             future_year = self.reps.current_year + 4
             peak_load = max(
-                self.reps.get_hourly_demand_by_power_grid_node_and_year(market.parameters['zone'])[
+                self.reps.get_hourly_demand_by_power_grid_node_and_year(market.zone)[
                     1])  # todo later it should be also per year
             try:
                 expectedDemandFactor = self.reps.dbrw.get_calculated_simulated_fuel_prices_by_year("electricity",
@@ -86,8 +86,8 @@ class ForwardCapacityMarketClearing(MarketModule):
 
             clearing_price = 0
             total_supply = 0
-            self.operator.setZone(market.parameters['zone'])
-            CMO_name = "CMO_" + market.parameters['zone']
+            self.operator.setZone(market.zone)
+            CMO_name = "CMO_" + market.zone
             try:
                 CM_operator = self.reps.sr_operator[CMO_name]
             except:
