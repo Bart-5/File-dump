@@ -1,0 +1,764 @@
+Agents:
+- Attributes:
+    DistributionMethod: SAME_SHARES
+    GateClosureInfoOffsetInSeconds: 11
+  Id: 1
+  Type: EnergyExchange
+- Attributes:
+    ShareOfRevenues: 0.0
+  Id: 2
+  Type: NoSupportTrader
+- Attributes:
+    Co2Prices: 20.0
+    OperationMode: FIXED
+  Id: 3
+  Type: CarbonMarket
+- Attributes:
+    FuelPrices:
+    - ConversionFactor: 1.0
+      FuelType: NUCLEAR
+      Price: 2.0
+    - ConversionFactor: 1.0
+      FuelType: LIGNITE
+      Price: 5.0
+    - ConversionFactor: 1.0
+      FuelType: HARD_COAL
+      Price: 11
+    - ConversionFactor: 1.0
+      FuelType: NATURAL_GAS
+      Price: 17
+    - ConversionFactor: 1.0
+      FuelType: OIL
+      Price: 37
+  Id: 4
+  Type: FuelsMarket
+- Attributes:
+    Loads:
+    - DemandSeries: amiris-config/data/load.csv
+      ValueOfLostLoad: 3000.0
+  Id: 5
+  Type: DemandTrader
+- Attributes:
+    DistributionMethod: SAME_SHARES
+    ForecastPeriodInHours: 168
+    ForecastRequestOffsetInSeconds: 27
+  Id: 6
+  Type: MeritOrderForecaster
+Contracts:
+- DeliveryIntervalInSteps: 3600
+  FirstDeliveryTime: -10
+  ProductName: GateClosureInfo
+  ReceiverId: 5
+  SenderId: 1
+- DeliveryIntervalInSteps: 3600
+  FirstDeliveryTime: 0
+  ProductName: Bids
+  ReceiverId: 1
+  SenderId: 5
+- DeliveryIntervalInSteps: 3600
+  FirstDeliveryTime: 4
+  ProductName: Awards
+  ReceiverId: 5
+  SenderId: 1
+- DeliveryIntervalInSteps: 3600
+  FirstDeliveryTime: -26
+  ProductName: ForecastRequest
+  ReceiverId: 2
+  SenderId: 6
+- DeliveryIntervalInSteps: 3600
+  FirstDeliveryTime: -21
+  ProductName: BidsForecast
+  ReceiverId: 6
+  SenderId: 2
+- DeliveryIntervalInSteps: 3600
+  FirstDeliveryTime: -10
+  ProductName: GateClosureInfo
+  ReceiverId: 2
+  SenderId: 1
+- DeliveryIntervalInSteps: 3600
+  FirstDeliveryTime: 0
+  ProductName: Bids
+  ReceiverId: 1
+  SenderId: 2
+- DeliveryIntervalInSteps: 3600
+  FirstDeliveryTime: 4
+  ProductName: Awards
+  ReceiverId: 2
+  SenderId: 1
+GeneralProperties:
+  Output:
+    Interval: 100
+    Process: 0
+  RunId: 1
+  Simulation:
+    RandomSeed: 1
+    StartTime: 2029-12-31_23:58:00
+    StopTime: 2030-12-31_23:58:00
+Schema:
+  AgentTypes:
+    Biogas:
+      Attributes:
+        DispatchTimeSeries:
+          AttributeType: time_series
+          Mandatory: false
+        EnergyCarrier:
+          AttributeType: enum
+          List: false
+          Mandatory: true
+          Values:
+          - Biogas
+        FullLoadHoursPerYear:
+          AttributeType: double
+          Mandatory: false
+        InstalledPowerInMW:
+          AttributeType: time_series
+          Mandatory: true
+        OperationMode:
+          AttributeType: enum
+          Mandatory: true
+          Values:
+          - CONTINUOUS
+          - DAY_NIGHT
+          - FROM_FILE
+        OpexVarInEURperMWH:
+          AttributeType: time_series
+          Mandatory: true
+        Refinancing:
+          AttributeType: block
+          List: false
+          Mandatory: false
+          NestedAttributes:
+            AnnuityFactor:
+              AttributeType: double
+              List: false
+              Mandatory: false
+            FixedCostsInEURperYearMW:
+              AttributeType: double
+              List: false
+              Mandatory: false
+            InvestmentExpensensesInEURperMW:
+              AttributeType: double
+              List: false
+              Mandatory: false
+        Set:
+          AttributeType: enum
+          List: false
+          Mandatory: false
+          Values:
+          - Biogas
+      Products:
+      - MarginalCost
+      - MarginalCostForecast
+      - SetRegistration
+      - AnnualCostReport
+    CarbonMarket:
+      Attributes:
+        Co2Prices:
+          AttributeType: time_series
+          List: false
+          Mandatory: false
+        OperationMode:
+          AttributeType: enum
+          List: false
+          Mandatory: true
+          Values:
+          - FIXED
+          - DYNAMIC
+      Products:
+      - Co2PriceForecast
+      - Co2Price
+      - CertificateBill
+    ConventionalPlantOperator:
+      Attributes:
+        Refinancing:
+          AttributeType: block
+          List: false
+          Mandatory: false
+          NestedAttributes:
+            AnnuityFactor:
+              AttributeType: double
+              List: false
+              Mandatory: false
+            FixedCostsInEURperYearMW:
+              AttributeType: double
+              List: false
+              Mandatory: false
+            InvestmentExpensensesInEURperMW:
+              AttributeType: double
+              List: false
+              Mandatory: false
+      Products:
+      - Co2Emissions
+      - Co2PriceForecastRequest
+      - FuelPriceForecastRequest
+      - FuelPriceRequest
+      - ConsumedFuel
+      - MarginalCost
+      - MarginalCostForecast
+      - Co2PriceRequest
+      - AnnualCostReport
+    ConventionalTrader:
+      Attributes:
+        maxMarkup:
+          AttributeType: double
+          List: false
+          Mandatory: true
+        minMarkup:
+          AttributeType: double
+          List: false
+          Mandatory: true
+      Products:
+      - Bids
+      - Payout
+      - DispatchAssignment
+      - BidsForecast
+      - MeritOrderForecastRequest
+      - PriceForecastRequest
+      - GateClosureForward
+      - ForecastRequestForward
+    DemandTrader:
+      Attributes:
+        Loads:
+          AttributeType: block
+          List: true
+          Mandatory: true
+          NestedAttributes:
+            DemandSeries:
+              AttributeType: time_series
+              List: false
+              Mandatory: true
+            ValueOfLostLoad:
+              AttributeType: double
+              List: false
+              Mandatory: true
+      Products:
+      - Bids
+      - Payout
+      - DispatchAssignment
+      - BidsForecast
+      - MeritOrderForecastRequest
+      - PriceForecastRequest
+      - GateClosureForward
+      - ForecastRequestForward
+    EnergyExchange:
+      Attributes:
+        DistributionMethod:
+          AttributeType: enum
+          List: false
+          Mandatory: true
+          Values:
+          - SAME_SHARES
+          - FIRST_COME_FIRST_SERVE
+          - RANDOMIZE
+        GateClosureInfoOffsetInSeconds:
+          AttributeType: integer
+          List: false
+          Mandatory: true
+      Products:
+      - Awards
+      - GateClosureInfo
+    FuelsMarket:
+      Attributes:
+        FuelPrices:
+          AttributeType: block
+          List: true
+          Mandatory: true
+          NestedAttributes:
+            ConversionFactor:
+              AttributeType: double
+              List: false
+              Mandatory: true
+            FuelType:
+              AttributeType: enum
+              List: false
+              Mandatory: true
+              Values:
+              - OIL
+              - HARD_COAL
+              - LIGNITE
+              - NUCLEAR
+              - WASTE
+              - NATURAL_GAS
+            Price:
+              AttributeType: time_series
+              List: false
+              Mandatory: true
+      Products:
+      - FuelPriceForecast
+      - FuelPrice
+      - FuelsBill
+    MeritOrderForecaster:
+      Attributes:
+        DistributionMethod:
+          AttributeType: enum
+          List: false
+          Mandatory: true
+          Values:
+          - SAME_SHARES
+          - FIRST_COME_FIRST_SERVE
+          - RANDOMIZE
+        ForecastPeriodInHours:
+          AttributeType: integer
+          List: false
+          Mandatory: true
+        ForecastRequestOffsetInSeconds:
+          AttributeType: integer
+          List: false
+          Mandatory: true
+      Products:
+      - ForecastRequest
+      - MeritOrderForecast
+    NoSupportTrader:
+      Attributes:
+        ForecastError:
+          AttributeType: block
+          List: false
+          Mandatory: false
+          NestedAttributes:
+            Mean:
+              AttributeType: double
+              List: false
+              Mandatory: false
+            Variance:
+              AttributeType: double
+              List: false
+              Mandatory: false
+        ShareOfRevenues:
+          AttributeType: double
+          List: false
+          Mandatory: true
+      Products:
+      - Bids
+      - Payout
+      - DispatchAssignment
+      - BidsForecast
+      - MeritOrderForecastRequest
+      - PriceForecastRequest
+      - SupportInfoRequest
+      - SupportPayoutRequest
+      - YieldPotential
+      - GateClosureForward
+      - ForecastRequestForward
+    PredefinedPlantBuilder:
+      Attributes:
+        BlockSizeInMW:
+          AttributeType: double
+          List: false
+          Mandatory: true
+        Efficiency:
+          AttributeType: block
+          List: false
+          Mandatory: true
+          NestedAttributes:
+            Maximal:
+              AttributeType: time_series
+              List: false
+              Mandatory: true
+            Minimal:
+              AttributeType: time_series
+              List: false
+              Mandatory: true
+        EfficiencyRoundingPrecision:
+          AttributeType: integer
+          List: false
+          Mandatory: false
+        InstalledPowerInMW:
+          AttributeType: time_series
+          List: false
+          Mandatory: true
+        PortfolioBuildingOffsetInSeconds:
+          AttributeType: long
+          List: false
+          Mandatory: true
+        Prototype:
+          AttributeType: block
+          List: false
+          Mandatory: true
+          NestedAttributes:
+            CyclingCostInEURperMW:
+              AttributeType: double
+              List: false
+              Mandatory: true
+            FuelType:
+              AttributeType: enum
+              List: false
+              Mandatory: true
+              Values:
+              - LIGNITE
+              - OIL
+              - WASTE
+              - NUCLEAR
+              - HARD_COAL
+              - NATURAL_GAS
+            OpexVarInEURperMWH:
+              AttributeType: time_series
+              List: false
+              Mandatory: true
+            PlannedAvailability:
+              AttributeType: time_series
+              List: false
+              Mandatory: true
+            SpecificCo2EmissionsInTperMWH:
+              AttributeType: double
+              List: false
+              Mandatory: true
+            UnplannedAvailabilityFactor:
+              AttributeType: double
+              List: false
+              Mandatory: true
+      Products:
+      - PowerPlantPortfolio
+    PriceForecaster:
+      Attributes:
+        DistributionMethod:
+          AttributeType: enum
+          List: false
+          Mandatory: true
+          Values:
+          - SAME_SHARES
+          - FIRST_COME_FIRST_SERVE
+          - RANDOMIZE
+        ForecastPeriodInHours:
+          AttributeType: integer
+          List: false
+          Mandatory: true
+        ForecastRequestOffsetInSeconds:
+          AttributeType: integer
+          List: false
+          Mandatory: true
+      Products:
+      - ForecastRequest
+      - PriceForecast
+    RenewableTrader:
+      Attributes:
+        ForecastError:
+          AttributeType: block
+          List: false
+          Mandatory: false
+          NestedAttributes:
+            Mean:
+              AttributeType: double
+              List: false
+              Mandatory: false
+            Variance:
+              AttributeType: double
+              List: false
+              Mandatory: false
+        ShareOfRevenues:
+          AttributeType: double
+          List: false
+          Mandatory: true
+      Products:
+      - Bids
+      - Payout
+      - DispatchAssignment
+      - BidsForecast
+      - MeritOrderForecastRequest
+      - PriceForecastRequest
+      - SupportInfoRequest
+      - SupportPayoutRequest
+      - YieldPotential
+      - GateClosureForward
+      - ForecastRequestForward
+    StorageTrader:
+      Attributes:
+        Device:
+          AttributeType: block
+          List: false
+          Mandatory: true
+          NestedAttributes:
+            ChargingEfficiency:
+              AttributeType: double
+              List: false
+              Mandatory: true
+            DischargingEfficiency:
+              AttributeType: double
+              List: false
+              Mandatory: true
+            EnergyToPowerRatio:
+              AttributeType: double
+              List: false
+              Mandatory: true
+            InitialEnergyLevelInMWH:
+              AttributeType: double
+              List: false
+              Mandatory: true
+            InstalledPowerInMW:
+              AttributeType: double
+              List: false
+              Mandatory: true
+            SelfDischargeRatePerHour:
+              AttributeType: double
+              List: false
+              Mandatory: true
+        ForecastRequestOffsetInSeconds:
+          AttributeType: integer
+          List: false
+          Mandatory: true
+        Refinancing:
+          AttributeType: block
+          List: false
+          Mandatory: false
+          NestedAttributes:
+            AnnuityFactor:
+              AttributeType: double
+              List: false
+              Mandatory: false
+            FixedCostsInEURperYearMW:
+              AttributeType: double
+              List: false
+              Mandatory: false
+            InvestmentExpensensesInEURperMW:
+              AttributeType: double
+              List: false
+              Mandatory: false
+        Strategy:
+          AttributeType: block
+          List: false
+          Mandatory: true
+          NestedAttributes:
+            FixedDispatch:
+              AttributeType: block
+              List: false
+              Mandatory: false
+              NestedAttributes:
+                Schedule:
+                  AttributeType: time_series
+                  List: false
+                  Mandatory: false
+            ForecastPeriodInHours:
+              AttributeType: integer
+              List: false
+              Mandatory: true
+            MultiAgent:
+              AttributeType: block
+              List: false
+              Mandatory: false
+              NestedAttributes:
+                AssessmentFunctionPrefactors:
+                  AttributeType: double
+                  List: true
+                  Mandatory: false
+            ScheduleDurationInHours:
+              AttributeType: integer
+              List: false
+              Mandatory: true
+            SingleAgent:
+              AttributeType: block
+              List: false
+              Mandatory: false
+              NestedAttributes:
+                ModelledChargingSteps:
+                  AttributeType: integer
+                  List: false
+                  Mandatory: false
+                PurchaseLeviesAndTaxesInEURperMWH:
+                  AttributeType: double
+                  List: false
+                  Mandatory: false
+            StrategistType:
+              AttributeType: enum
+              List: false
+              Mandatory: true
+              Values:
+              - SINGLE_AGENT_MAX_PROFIT
+              - SINGLE_AGENT_MIN_SYSTEM_COST
+              - MULTI_AGENT_SIMPLE
+              - DISPATCH_FILE
+      Products:
+      - Bids
+      - Payout
+      - DispatchAssignment
+      - BidsForecast
+      - MeritOrderForecastRequest
+      - PriceForecastRequest
+      - GateClosureForward
+      - ForecastRequestForward
+      - AnnualCostReport
+    SupportPolicy:
+      Attributes:
+        SetSupportData:
+          AttributeType: block
+          List: true
+          Mandatory: true
+          NestedAttributes:
+            CFD:
+              AttributeType: block
+              List: false
+              Mandatory: false
+              NestedAttributes:
+                Lcoe:
+                  AttributeType: time_series
+                  List: false
+                  Mandatory: false
+            CP:
+              AttributeType: block
+              List: false
+              Mandatory: false
+              NestedAttributes:
+                Premium:
+                  AttributeType: time_series
+                  List: false
+                  Mandatory: false
+            FIT:
+              AttributeType: block
+              List: false
+              Mandatory: false
+              NestedAttributes:
+                SuspensionVolumeShare:
+                  AttributeType: double
+                  List: false
+                  Mandatory: false
+                TsFit:
+                  AttributeType: time_series
+                  List: false
+                  Mandatory: false
+            MPFIX:
+              AttributeType: block
+              List: false
+              Mandatory: false
+              NestedAttributes:
+                Premium:
+                  AttributeType: time_series
+                  List: false
+                  Mandatory: false
+            MPVAR:
+              AttributeType: block
+              List: false
+              Mandatory: false
+              NestedAttributes:
+                Lcoe:
+                  AttributeType: time_series
+                  List: false
+                  Mandatory: false
+            Set:
+              AttributeType: enum
+              List: false
+              Mandatory: true
+              Values:
+              - PVRooftop
+              - WindOn
+              - WindOff
+              - RunOfRiver
+              - OtherPV
+              - Biogas
+              - Undefined
+              - PvFit
+              - PvMpvarCluster1
+              - PvMpvarCluster2
+              - PvMpvarCluster3
+              - PvMpvarCluster4
+              - PvMpvarCluster5
+              - WindOnFit
+              - WindOnMpvarCluster1
+              - WindOnMpvarCluster2
+              - WindOnMpvarCluster3
+              - WindOnMpvarCluster4
+              - WindOnMpvarCluster5
+              - WindOffMpvarCluster1
+              - WindOffMpvarCluster2
+              - WindOffMpvarCluster3
+              - WindOffMpvarCluster4
+              - PvMpfix
+              - WindOnMpfix
+              - WindOffMpfix
+      Products:
+      - SupportInfo
+      - SupportPayout
+      - MarketValueCalculation
+    SystemOperatorTrader:
+      Attributes:
+        ForecastError:
+          AttributeType: block
+          List: false
+          Mandatory: false
+          NestedAttributes:
+            Mean:
+              AttributeType: double
+              List: false
+              Mandatory: false
+            Variance:
+              AttributeType: double
+              List: false
+              Mandatory: false
+      Products:
+      - Bids
+      - Payout
+      - DispatchAssignment
+      - BidsForecast
+      - MeritOrderForecastRequest
+      - PriceForecastRequest
+      - SupportInfoRequest
+      - SupportPayoutRequest
+      - YieldPotential
+      - GateClosureForward
+      - ForecastRequestForward
+    VariableRenewableOperator:
+      Attributes:
+        EnergyCarrier:
+          AttributeType: enum
+          List: false
+          Mandatory: true
+          Values:
+          - PV
+          - WindOn
+          - WindOff
+          - RunOfRiver
+          - Other
+        InstalledPowerInMW:
+          AttributeType: time_series
+          List: false
+          Mandatory: true
+        OpexVarInEURperMWH:
+          AttributeType: time_series
+          List: false
+          Mandatory: true
+        Refinancing:
+          AttributeType: block
+          List: false
+          Mandatory: false
+          NestedAttributes:
+            AnnuityFactor:
+              AttributeType: double
+              List: false
+              Mandatory: false
+            FixedCostsInEURperYearMW:
+              AttributeType: double
+              List: false
+              Mandatory: false
+            InvestmentExpensensesInEURperMW:
+              AttributeType: double
+              List: false
+              Mandatory: false
+        Set:
+          AttributeType: enum
+          List: false
+          Mandatory: false
+          Values:
+          - PVRooftop
+          - OtherPV
+          - WindOn
+          - WindOff
+          - RunOfRiver
+          - Undefined
+        SupportInstrument:
+          AttributeType: enum
+          List: false
+          Mandatory: false
+          Values:
+          - FIT
+          - MPVAR
+          - MPFIX
+          - CFD
+          - CP
+        YieldProfile:
+          AttributeType: time_series
+          List: false
+          Mandatory: true
+      Products:
+      - MarginalCost
+      - MarginalCostForecast
+      - SetRegistration
+      - AnnualCostReport
+Variables:
+- 60
